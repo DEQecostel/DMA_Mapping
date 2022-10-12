@@ -9,46 +9,68 @@ library(stringr)
 
 # Input Data ------------------------------------------------------------
 
-gis_dir <- "//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS"
-lu_dir <-  "//deqhq1/TMDL/DMA_Mapping/Master/Lookups"
+#County GIS directory name
+gis_dir <- "//deqhq1/TMDL/DMA_Mapping/Baker/GIS"
+#County GIS file names
+taxlot_name <- "Baker_Taxlot01withTable"
+zoning_name <- "zoning_union"
+public_name <-  "public_union"
+citylim_name <-  "citylim_union"
+#tribe_name <-
+county_name <- "BakerCounty"
+
+#Main GIS directory name
+gis_main <- "//deqhq1/TMDL/DMA_Mapping/Main/GIS"
+#Main GIS file names
+road_name <- "roads_2017_300ftBuffer"
+rail_buff_name <- "railroads_2017_200ftBuffer"
+rail_line_name <- "railroads"
+
+#Look Up Table directory name
+LU_dir <-  "//deqhq1/TMDL/DMA_Mapping/Main/Lookups"
+#Look Up Table names
+LU_owner_name <- "TaxlotOwners.csv"
+LU_zoning_name <- "ZoningClassification.csv"
+LU_nlcd_name <- "LandcoverClassification.csv"
+LU_rail_name <- "railroads.csv"
+LU_roads_name <- "roads.csv"
+LU_DMAs_name <- "DMAs.csv"
+
 
 #Name of county
-countyname <- "Yamhill County"
+countyname <- "Baker County"
+
 #Are there gaps in the tax lots shapefile? (usually roads and waterways) (yes=TRUE, no=FALSE)
-gaps <- 
+gaps <- FALSE
+
 #Tribal land in county? (yes=TRUE, no=FALSE)
-tribal <- 
+tribal <- FALSE
+
 #is zoning info available for the county? (yes=TRUE, no=FALSE)
-zcodes <- 
-#Is the public land management data from 2015 or 2019
-pubyear <- 
+zcodes <- TRUE
 
-#Base Data
-taxlots<-st_read(gis_dir,"taxlots_nlcd", stringsAsFactors = FALSE)
-zoning<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","zoning_union", stringsAsFactors = FALSE)
-public<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","public_union", stringsAsFactors = FALSE)
-citylim<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","citylim_union", stringsAsFactors = FALSE)
-tribe<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","tribal", stringsAsFactors = FALSE)
-roads_buff <- st_read("//deqhq1/TMDL/DMA_Mapping/Master/GIS","roads_2017_300ftBuffer", stringsAsFactors = FALSE)
-rail_buff <- st_read("//deqhq1/TMDL/DMA_Mapping/Master/GIS","railroads_2017_200ftBuffer", stringsAsFactors = FALSE)
-rail_line <- st_read("//deqhq1/TMDL/DMA_Mapping/Master/GIS","railroads", stringsAsFactors = FALSE)
-county <- st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","YamhillCounty", stringsAsFactors = FALSE)
+#Is the public land management data from 2015 or 2019?
+pubyear <- 2019
 
-#Look Up Tables
-LU_owner <- read.csv("//deqhq1/TMDL/DMA_Mapping/Master/Lookups/TaxlotOwners.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
-LU_zoning<- read.csv("//deqhq1/TMDL/DMA_Mapping/Master/Lookups/ZoningClassification.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
-LU_nlcd <- read.csv("//deqhq1/TMDL/DMA_Mapping/Master/Lookups/LandcoverClassification.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
-LU_rail <- read.csv("//deqhq1/TMDL/DMA_Mapping/Master/Lookups/railroads.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
-LU_roads <- read.csv("//deqhq1/TMDL/DMA_Mapping/Master/Lookups/roads.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
-LU_DMAs<- read.csv("//deqhq1/TMDL/DMA_Mapping/Master/Lookups/DMAs.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
+#Read in GIS Data
+taxlots<-st_read(gis_dir,taxlot_name, stringsAsFactors = FALSE)
+zoning<-st_read(gis_dir, zoning_name, stringsAsFactors = FALSE)
+public<-st_read(gis_dir,public_name, stringsAsFactors = FALSE)
+citylim<-st_read(gis_dir,citylim_name, stringsAsFactors = FALSE)
+#tribe<-st_read(gis_dir,tribe_name, stringsAsFactors = FALSE)
+county <- st_read(gis_dir, county_name, stringsAsFactors = FALSE)
+roads_buff <- st_read(gis_main,road_name, stringsAsFactors = FALSE)
+rail_buff <- st_read(gis_main,rail_buff_name, stringsAsFactors = FALSE)
+rail_line <- st_read(gis_main, rail_line_name, stringsAsFactors = FALSE)
 
-#Load pre-existing data
-# Yamhill_DMAs<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","Yamhill_DMAs_D1", stringsAsFactors = FALSE)
-# t<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","t", stringsAsFactors = FALSE)
-# z<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","z", stringsAsFactors = FALSE)
-# c<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","c", stringsAsFactors = FALSE)
-# p<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","p", stringsAsFactors = FALSE)
-# tr<-st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","tr", stringsAsFactors = FALSE)
+
+# Read in Look Up Tables
+LU_owner <- read.csv(paste0(LU_dir, "/", LU_owner_name), header=TRUE, sep=",", stringsAsFactors = FALSE)
+LU_zoning<- read.csv(paste0(LU_dir, "/", LU_zoning_name), header=TRUE, sep=",", stringsAsFactors = FALSE)
+LU_nlcd <- read.csv(paste0(LU_dir, "/", LU_nlcd_name), header=TRUE, sep=",", stringsAsFactors = FALSE)
+LU_rail <- read.csv(paste0(LU_dir, "/", LU_rail_name), header=TRUE, sep=",", stringsAsFactors = FALSE)
+LU_roads <- read.csv(paste0(LU_dir, "/", LU_roads_name), header=TRUE, sep=",", stringsAsFactors = FALSE)
+LU_DMAs<- read.csv(paste0(LU_dir, "/", LU_DMAs_name), header=TRUE, sep=",", stringsAsFactors = FALSE)
 
 
 # Clean Data ---------------------------------------------------------------
