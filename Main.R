@@ -36,23 +36,22 @@ LU_rail_name <- "railroads.csv"
 LU_roads_name <- "roads.csv"
 LU_DMAs_name <- "DMAs.csv"
 
-
+#County specific details
 #Name of county
 countyname <- "Baker County"
-
 #Are there gaps in the tax lots shapefile? (usually roads and waterways) (yes=TRUE, no=FALSE)
 gaps <- FALSE
-
 #Tribal land in county? (yes=TRUE, no=FALSE)
 tribal <- FALSE
-
 #is zoning info available for the county? (yes=TRUE, no=FALSE)
 zcodes <- TRUE
-
 #Is the public land management data from 2015 or 2019?
 pubyear <- 2019
 
-#Read in GIS Data
+
+# Read in data ---------------------------------------------------------
+
+# Read in GIS Data
 taxlots<-st_read(gis_dir,taxlot_name, stringsAsFactors = FALSE)
 zoning<-st_read(gis_dir, zoning_name, stringsAsFactors = FALSE)
 public<-st_read(gis_dir,public_name, stringsAsFactors = FALSE)
@@ -75,19 +74,20 @@ LU_DMAs<- read.csv(paste0(LU_dir, "/", LU_DMAs_name), header=TRUE, sep=",", stri
 
 # Clean Data ---------------------------------------------------------------
 
-##ROADS##
+##ROADS
 #Clip the roads buffer to the county outline
 roads_buff <- st_transform(roads_buff, st_crs(taxlots))
 county <- st_transform(county, st_crs(taxlots))
 roads_buff_clip <- st_intersection(roads_buff, county)
-st_write(roads_buff_clip,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "roads_clip.shp", driver = "ESRI Shapefile", update=TRUE)
+st_write(roads_buff_clip, dsn = gis_dir, "roads_clip.shp", driver = "ESRI Shapefile", update = TRUE)
 
 ##Railroads
 #Clip the railroads layer to the county outline
 rail_buff <- st_transform(rail_buff, st_crs(county))
 rail_line <- st_transform(rail_line, st_crs(county))
 rail_buff_clip <- st_intersection(rail_buff, county)
-st_write(rail_buff_clip,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "rail_clip.shp", driver = "ESRI Shapefile", update=TRUE)
+st_write(rail_buff_clip,dsn = gis_dir, "rail_clip.shp", driver = "ESRI Shapefile", update=TRUE)
+
 #Clip the rail lines to the county outline
 rail_line_clip <- st_intersection(rail_line, county)
 #filter
@@ -111,7 +111,7 @@ if(zcodes==TRUE){
   #rename columns
   t <- plyr::rename(t, c("OWNERLINE1"="OwnerName", "RR_NAME"="RailInt"))
   #export as shp to save progress
-  st_write(t,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "t.shp", driver = "ESRI Shapefile", update=TRUE)
+  st_write(t,dsn = gis_dir, "t.shp", driver = "ESRI Shapefile", update=TRUE)
 }
 
 if(zcodes==FALSE){
@@ -141,7 +141,7 @@ if(zcodes==TRUE){
   #make valid
   z<-st_make_valid(z)
   #export as shp to save progress
-  st_write(z,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "z.shp", driver = "ESRI Shapefile", update=TRUE)
+  st_write(z,dsn = gis_dir, "z.shp", driver = "ESRI Shapefile", update=TRUE)
 }
 
 ##CITY LIMITS##
@@ -156,7 +156,7 @@ c<-st_set_precision(c, 100000)
 #make valid
 c<-st_make_valid(c)
 #save as shp
-st_write(c,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "c.shp", driver = "ESRI Shapefile", update=TRUE)
+st_write(c,dsn = gis_dir, "c.shp", driver = "ESRI Shapefile", update=TRUE)
 
 
 ##PUBLIC LAND MANAGEMENT##
@@ -174,7 +174,7 @@ p<-st_set_precision(p, 100000)
 #make valid
 p<-st_make_valid(p)
 #save as shp
-st_write(p,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "p.shp", driver = "ESRI Shapefile", update=TRUE)
+st_write(p,dsn = gis_dir, "p.shp", driver = "ESRI Shapefile", update=TRUE)
 
 
 ##TRIBAL AREAS##
@@ -190,7 +190,7 @@ if(tribal==TRUE){
   #make valid
   tr<-st_make_valid(tr)
   #save
-  st_write(tr,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "tr.shp", driver = "ESRI Shapefile", update=TRUE)
+  st_write(tr,dsn = gis_dir, "tr.shp", driver = "ESRI Shapefile", update=TRUE)
 }
 
 
@@ -201,34 +201,34 @@ if(tribal==TRUE){
 if(zcodes==TRUE){
   tz<-st_join(t,z,largest=TRUE)
   #save joined data
-  st_write(tz,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "tz.shp", driver = "ESRI Shapefile", update=TRUE)
+  st_write(tz,dsn = gis_dir, "tz.shp", driver = "ESRI Shapefile", update=TRUE)
 }
 
 ##CITY LIMITS##
 #Join city limit  data to tax lots/zoning feature
 tzc<-st_join(tz, c, largest=TRUE)
 #save joined data
-st_write(tzc,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "tzc.shp", driver = "ESRI Shapefile", update=TRUE)
+st_write(tzc,dsn = gis_dir, "tzc.shp", driver = "ESRI Shapefile", update=TRUE)
 
 ##PUBLIC LAND MANAGEMENT##
 #Join public land management data to tax lots/zoning/city limits feature
 tzcp<-st_join(tzc, p, largest=TRUE)
 #save joined data
-st_write(tzcp,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "tzcp.shp", driver = "ESRI Shapefile", update=TRUE)
+st_write(tzcp,dsn=gis_dir, "tzcp.shp", driver = "ESRI Shapefile", update=TRUE)
 
 ##TRIBAL AREAS##
 if(tribal==TRUE){
   #join tribal areas data to tax lots/zoning/city limits/public 
   tzcptr<-st_join(tzcp, tr, largest=TRUE)
   #save jonied data
-  st_write(tzcptr,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "tzcptr.shp", driver = "ESRI Shapefile", update=TRUE )
+  st_write(tzcptr,dsn=gis_dir, "tzcptr.shp", driver = "ESRI Shapefile", update=TRUE )
 }
 
 if(tribal==FALSE){
   tzcptr <- tzcp
   tzcptr$Tribe <- as.character(NA) 
   #save jonied data
-  st_write(tzcptr,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "tzcptr.shp", driver = "ESRI Shapefile", update=TRUE )
+  st_write(tzcptr,dsn=gis_dir, "tzcptr.shp", driver = "ESRI Shapefile", update=TRUE )
 }
 
 
@@ -238,7 +238,7 @@ if(tribal==FALSE){
 # Assign DMAs-------------------------------------------------------------
 
 #read in tzcptr feature with roads and rail unioned
-tzcptr_rr <- st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","tzcptr2_rr", stringsAsFactors = FALSE)
+tzcptr_rr <- st_read(gis_dir,"tzcptr2_rr", stringsAsFactors = FALSE)
 
 #Rename columns, and add DMA and DMA2 columns
 Yamhill_DMAs<-tzcptr_rr[,c("Taxlot","MapTaxlot","ROADOWNER","RR_NAME", "RailInt", "CityName","OwnerName","LandManage","orZCode","orZDesc","NLCD","NLCD_Type", "Tribe")]
@@ -266,8 +266,8 @@ Yamhill_DMAs$NLCD_Class <- ifelse(Yamhill_DMAs$NLCD %in% LU_nlcd$NLCD.Code,
                                   "")
 
 #export as shp to save progress
-st_write(Yamhill_DMAs,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "Yamhill_DMAs_R1.shp", driver = "ESRI Shapefile", update=TRUE )
-#Yamhill_DMAs <- st_read("//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS","Yamhill_DMAs_R1", stringsAsFactors = FALSE)
+st_write(Yamhill_DMAs,dsn=gis_dir, "Yamhill_DMAs_R1.shp", driver = "ESRI Shapefile", update=TRUE )
+#Yamhill_DMAs <- st_read(gis_dir,"Yamhill_DMAs_R1", stringsAsFactors = FALSE)
 
 #copy original Yamhill_DMAs dataframe for backup
 df.all <- Yamhill_DMAs
@@ -731,7 +731,7 @@ Yamhill_DMAs <- plyr::rename(Yamhill_DMAs, c("DMA"="DMA_RP_Ab","DMA2"="DMA_RP2_A
 #reorder columns
 Yamhill_DMAs <- Yamhill_DMAs[c("Taxlot","MapTaxlot","RoadOwner","RailOwner","RailInt","Tribe", "CityName","LandManage","OwnerName","orZCode","orZDesc","orZClass", "PrpClsDsc","PrpClass","NLCD","NLCD_Type", "NLCD_Class", "DMA_RP_Ab","DMA_RP","DMA_RP_Cl","DMA_RP2_Ab","DMA_RP2","DMA_RP2_Cl", "edit", "Symbol")]
 #write to shapefile
-st_write(Yamhill_DMAs,dsn="//deqhq1/TMDL/DMA_Mapping/Yamhill/GIS", "Yamhill_DMAs.shp", driver = "ESRI Shapefile",
+st_write(Yamhill_DMAs,dsn=gis_dir, "Yamhill_DMAs.shp", driver = "ESRI Shapefile",
          update=TRUE )
 
 # Return to ArcMap for final edits ----------------------------------
