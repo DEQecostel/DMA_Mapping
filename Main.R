@@ -118,7 +118,7 @@ if(zcodes==TRUE){
 
 if(zcodes==FALSE){
   #Subset tax lots attribute table to include unique tax lot identifier (APN), tax lot type, owner name and NLCD information.
-  t<-taxlots[,c("Taxlot", "MapTaxlot", "OwnerLine1","PrpClsDsc", "PrpClass", "NLCD", "NLCD_Type")]
+  t<-taxlots[,c("Taxlot", "MapTaxlot", owner_col,"PrpClsDsc", "PrpClass", "NLCD", "NLCD_Type")]
   #buffer tax lots
   t<-st_buffer(t, 0.0)
   #set precision
