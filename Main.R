@@ -98,7 +98,7 @@ rail_line_clip <- rail_line_clip[,c("RR_NAME")]
 ##TAXLOTS##
 if(zcodes==TRUE){
   #Subset tax lots attribute table to include unique tax lot identifier (APN), tax lot type, owner name and NLCD information.
-  t<-taxlots[,c("Taxlot", "MapTaxlot", owner_col, "NLCD", "NLCD_Type")]
+  t<-taxlots[,c("Taxlot", "MapTaxlot", owner_col,"PrpClsDsc", "PrpClass", "NLCD", "NLCD_Type")]
   #buffer tax lots
   t<-st_buffer(t, 0.0)
   #set precision
@@ -109,7 +109,7 @@ if(zcodes==TRUE){
   rail_line_clip <- st_transform(rail_line_clip, st_crs(t))
   t <- st_join(t, rail_line_clip)
   #subset attributes
-  t <- t[,c("Taxlot", "MapTaxlot", owner_col, "NLCD", "NLCD_Type", "RR_NAME")]
+  t <- t[,c("Taxlot", "MapTaxlot", owner_col, "PrpClsDsc", "PrpClass","NLCD", "NLCD_Type", "RR_NAME")]
   #rename columns
   t <- dplyr::rename(t, c("OwnerName" = all_of(owner_col), "RailInt" = "RR_NAME"))
   #export as shp to save progress
@@ -234,506 +234,506 @@ if(tribal==FALSE){
 }
 
 
-# STOP! Return to ArcMap to Union roads_buff_clip and rail_buff_clip to tzcptr feature! --------------
+# STOP! Return to ArcMap to Union roads_clip and rail_clip to tzcptr feature! Name the final output tzcptr_rr --------------
 
 
 # Assign DMAs-------------------------------------------------------------
 
 #read in tzcptr feature with roads and rail unioned
-tzcptr_rr <- st_read(gis_dir,"tzcptr2_rr", stringsAsFactors = FALSE)
+tzcptr_rr <- st_read(gis_dir,"tzcptr_rr", stringsAsFactors = FALSE)
 
 #Rename columns, and add DMA and DMA2 columns
-Yamhill_DMAs<-tzcptr_rr[,c("Taxlot","MapTaxlot","ROADOWNER","RR_NAME", "RailInt", "CityName","OwnerName","LandManage","orZCode","orZDesc","NLCD","NLCD_Type", "Tribe")]
-Yamhill_DMAs <- plyr::rename(Yamhill_DMAs, c("ROADOWNER"="RoadOwner", "RR_NAME"="RailOwner"))
-Yamhill_DMAs$DMA<-as.character(NA)
-Yamhill_DMAs$DMA2<-as.character(NA)
+DMAs<-tzcptr_rr[,c("Taxlot","MapTaxlot","ROADOWNER","RR_NAME", "RailInt", "CityName","OwnerName","LandManage","orZCode","orZDesc","NLCD","NLCD_Type", "Tribe")]
+DMAs <- plyr::rename(DMAs, c("ROADOWNER"="RoadOwner", "RR_NAME"="RailOwner"))
+DMAs$DMA<-as.character(NA)
+DMAs$DMA2<-as.character(NA)
 
 #Add PrpClsDsc and PrpClass columns if they do not already exist
 if(zcodes==TRUE){
-Yamhill_DMAs$PrpClsDsc <- as.character("")
-Yamhill_DMAs$PrpClass <- as.character("")
+DMAs$PrpClsDsc <- as.character("")
+DMAs$PrpClass <- as.character("")
 }
 
 #use LU_zoning and LU_nlcd to classify zone codes and land cover
-Yamhill_DMAs$orZClass <- as.character("")
-Yamhill_DMAs$NLCD_Class <- as.character("")
-Yamhill_DMAs$orZClass <- ifelse(Yamhill_DMAs$orZCode %in% LU_zoning$orZCode, 
-                                LU_zoning[match(Yamhill_DMAs$orZCode, LU_zoning$orZCode), 
+DMAs$orZClass <- as.character("")
+DMAs$NLCD_Class <- as.character("")
+DMAs$orZClass <- ifelse(DMAs$orZCode %in% LU_zoning$orZCode, 
+                                LU_zoning[match(DMAs$orZCode, LU_zoning$orZCode), 
                                           "orZClass"], 
                                 "")
-Yamhill_DMAs$NLCD_Class <- ifelse(Yamhill_DMAs$NLCD %in% LU_nlcd$NLCD.Code, 
-                                  LU_nlcd[match(Yamhill_DMAs$NLCD, 
+DMAs$NLCD_Class <- ifelse(DMAs$NLCD %in% LU_nlcd$NLCD.Code, 
+                                  LU_nlcd[match(DMAs$NLCD, 
                                                 LU_nlcd$NLCD.Code), 
                                           "NLCD_Class"], 
                                   "")
 
 #export as shp to save progress
-st_write(Yamhill_DMAs,dsn=gis_dir, "Yamhill_DMAs_R1.shp", driver = "ESRI Shapefile", update=TRUE )
-#Yamhill_DMAs <- st_read(gis_dir,"Yamhill_DMAs_R1", stringsAsFactors = FALSE)
+st_write(DMAs,dsn=gis_dir, "DMAs_R1.shp", driver = "ESRI Shapefile", update=TRUE )
+#DMAs <- st_read(gis_dir,"DMAs_R1", stringsAsFactors = FALSE)
 
-#copy original Yamhill_DMAs dataframe for backup
-df.all <- Yamhill_DMAs
-#Yamhill_DMAs <- df.all
+#copy original DMAs dataframe for backup
+df.all <- DMAs
+#DMAs <- df.all
 
 ##A: Roads##
-if(nrow(Yamhill_DMAs) > 0 & gaps == FALSE){
+if(nrow(DMAs) > 0 & gaps == FALSE){
   
-  Yamhill_DMAs$DMA <- ifelse((grepl("ROAD", Yamhill_DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) & 
-                                is.na(Yamhill_DMAs$Tribe) &
-                                Yamhill_DMAs$RoadOwner %in% LU_roads$ROADOWNER) | 
-                               (grepl("NON", Yamhill_DMAs$Taxlot,ignore.case = TRUE, fixed = FALSE) & 
-                                  Yamhill_DMAs$RoadOwner %in% LU_roads$ROADOWNER)|
-                              (grepl("STR", Yamhill_DMAs$Taxlot,ignore.case = TRUE, fixed = FALSE) & 
-                                  Yamhill_DMAs$RoadOwner %in% LU_roads$ROADOWNER), 
-                             LU_roads[match(Yamhill_DMAs$RoadOwner, LU_roads$ROADOWNER), "DMA"], 
-                             Yamhill_DMAs$DMA)
+  DMAs$DMA <- ifelse((grepl("ROAD", DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) & 
+                                is.na(DMAs$Tribe) &
+                                DMAs$RoadOwner %in% LU_roads$ROADOWNER) | 
+                               (grepl("NON", DMAs$Taxlot,ignore.case = TRUE, fixed = FALSE) & 
+                                  DMAs$RoadOwner %in% LU_roads$ROADOWNER)|
+                              (grepl("STR", DMAs$Taxlot,ignore.case = TRUE, fixed = FALSE) & 
+                                  DMAs$RoadOwner %in% LU_roads$ROADOWNER), 
+                             LU_roads[match(DMAs$RoadOwner, LU_roads$ROADOWNER), "DMA"], 
+                             DMAs$DMA)
   
-  Yamhill_DMAs$DMA <- ifelse(is.na(Yamhill_DMAs$Taxlot) &
-                               is.na(Yamhill_DMAs$Tribe) & 
-                               Yamhill_DMAs$RoadOwner %in% LU_roads$ROADOWNER, 
-                             LU_roads[match(Yamhill_DMAs$RoadOwner, LU_roads$ROADOWNER), "DMA"], 
-                             Yamhill_DMAs$DMA)
+  DMAs$DMA <- ifelse(is.na(DMAs$Taxlot) &
+                               is.na(DMAs$Tribe) & 
+                               DMAs$RoadOwner %in% LU_roads$ROADOWNER, 
+                             LU_roads[match(DMAs$RoadOwner, LU_roads$ROADOWNER), "DMA"], 
+                             DMAs$DMA)
   
-  Yamhill_Roads <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
+  Roads <- DMAs %>% dplyr::filter(!is.na(DMA))
   
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   
 }
 
-if(nrow(Yamhill_DMAs) > 0 & gaps == TRUE){
+if(nrow(DMAs) > 0 & gaps == TRUE){
   
-  Yamhill_DMAs$DMA <- ifelse(is.na(Yamhill_DMAs$Taxlot) & 
-                               is.na(Yamhill_DMAs$Tribe) & 
-                               Yamhill_DMAs$RoadOwner %in% LU_roads$ROADOWNER, 
-                             LU_roads[match(Yamhill_DMAs$RoadOwner, LU_roads$ROADOWNER), "DMA"], 
-                             Yamhill_DMAs$DMA)
+  DMAs$DMA <- ifelse(is.na(DMAs$Taxlot) & 
+                               is.na(DMAs$Tribe) & 
+                               DMAs$RoadOwner %in% LU_roads$ROADOWNER, 
+                             LU_roads[match(DMAs$RoadOwner, LU_roads$ROADOWNER), "DMA"], 
+                             DMAs$DMA)
   
   
-  Yamhill_Roads <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+  Roads <- DMAs %>% dplyr::filter(!is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   
 }
 
 ##B: Railroads##
-if(nrow(Yamhill_DMAs) > 0 & gaps == FALSE){
+if(nrow(DMAs) > 0 & gaps == FALSE){
   
-  Yamhill_DMAs$DMA <- ifelse((grepl("RAIL", Yamhill_DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
-                                Yamhill_DMAs$RailOwner %in% LU_rail$RR_NAME) | 
-                          (grepl("NON", Yamhill_DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
-                                  Yamhill_DMAs$RailOwner %in% LU_rail$RR_NAME)|
-                          (grepl("RR", Yamhill_DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
-                                   Yamhill_DMAs$RailOwner %in% LU_rail$RR_NAME),
-                             LU_rail[match(Yamhill_DMAs$RailOwner, LU_rail$RR_NAME), "DMA"], 
-                             Yamhill_DMAs$DMA)
+  DMAs$DMA <- ifelse((grepl("RAIL", DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
+                                DMAs$RailOwner %in% LU_rail$RR_NAME) | 
+                          (grepl("NON", DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
+                                  DMAs$RailOwner %in% LU_rail$RR_NAME)|
+                          (grepl("RR", DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
+                                   DMAs$RailOwner %in% LU_rail$RR_NAME),
+                             LU_rail[match(DMAs$RailOwner, LU_rail$RR_NAME), "DMA"], 
+                             DMAs$DMA)
   
-  Yamhill_DMAs$DMA <- ifelse(is.na(Yamhill_DMAs$Taxlot) &
-                               is.na(Yamhill_DMAs$Tribe) & 
-                               Yamhill_DMAs$RailOwner %in% LU_rail$RR_NAME, 
-                             LU_rail[match(Yamhill_DMAs$RailOwner, LU_rail$RR_NAME), "DMA"], 
-                             Yamhill_DMAs$DMA)
+  DMAs$DMA <- ifelse(is.na(DMAs$Taxlot) &
+                               is.na(DMAs$Tribe) & 
+                               DMAs$RailOwner %in% LU_rail$RR_NAME, 
+                             LU_rail[match(DMAs$RailOwner, LU_rail$RR_NAME), "DMA"], 
+                             DMAs$DMA)
   
-  Yamhill_DMAs$DMA2 <- ifelse(is.na(Yamhill_DMAs$DMA2) &
-                                is.na(Yamhill_DMAs$Tribe) &
-                                Yamhill_DMAs$RailInt %in% LU_rail$RR_NAME, 
-                              LU_rail[match(Yamhill_DMAs$RailInt, LU_rail$RR_NAME), "DMA"], 
-                              Yamhill_DMAs$DMA2)
+  DMAs$DMA2 <- ifelse(is.na(DMAs$DMA2) &
+                                is.na(DMAs$Tribe) &
+                                DMAs$RailInt %in% LU_rail$RR_NAME, 
+                              LU_rail[match(DMAs$RailInt, LU_rail$RR_NAME), "DMA"], 
+                              DMAs$DMA2)
   
-  Yamhill_Rails <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+  Rails <- DMAs %>% dplyr::filter(!is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   
 }
 
-if(nrow(Yamhill_DMAs) > 0 & gaps == TRUE){
+if(nrow(DMAs) > 0 & gaps == TRUE){
   
-  Yamhill_DMAs$DMA <- ifelse(is.na(Yamhill_DMAs$Taxlot) &
-                               is.na(Yamhill_DMAs$Tribe) &
-                               Yamhill_DMAs$RailOwner %in% LU_rail$RR_NAME, 
-                             LU_rail[match(Yamhill_DMAs$RailOwner, LU_rail$RR_NAME), "DMA"], 
-                             Yamhill_DMAs$DMA)
+  DMAs$DMA <- ifelse(is.na(DMAs$Taxlot) &
+                               is.na(DMAs$Tribe) &
+                               DMAs$RailOwner %in% LU_rail$RR_NAME, 
+                             LU_rail[match(DMAs$RailOwner, LU_rail$RR_NAME), "DMA"], 
+                             DMAs$DMA)
   
-  Yamhill_DMAs$DMA2 <- ifelse(is.na(Yamhill_DMAs$DMA2) &
-                                is.na(Yamhill_DMAs$Tribe) & 
-                                Yamhill_DMAs$RailInt %in% LU_rail$RR_NAME, 
-                              LU_rail[match(Yamhill_DMAs$RailInt, LU_rail$RR_NAME), "DMA"], 
-                              Yamhill_DMAs$DMA2)
+  DMAs$DMA2 <- ifelse(is.na(DMAs$DMA2) &
+                                is.na(DMAs$Tribe) & 
+                                DMAs$RailInt %in% LU_rail$RR_NAME, 
+                              LU_rail[match(DMAs$RailInt, LU_rail$RR_NAME), "DMA"], 
+                              DMAs$DMA2)
   
-  Yamhill_Rails <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+  Rails <- DMAs %>% dplyr::filter(!is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   
 }
 
 ##C: Ports
-if(nrow(Yamhill_DMAs) > 0){
-  Yamhill_DMAs$DMA <- ifelse((grepl("PORT OF", Yamhill_DMAs$OwnerName, ignore.case = TRUE, fixed = FALSE) &
-                                  Yamhill_DMAs$OwnerName %in% LU_owner$Owner_Name),
-                               LU_owner[match(Yamhill_DMAs$OwnerName, LU_owner$Owner_Name), "DMA"], 
-                               Yamhill_DMAs$DMA)
+if(nrow(DMAs) > 0){
+  DMAs$DMA <- ifelse((grepl("PORT OF", DMAs$OwnerName, ignore.case = TRUE, fixed = FALSE) &
+                                  DMAs$OwnerName %in% LU_owner$Owner_Name),
+                               LU_owner[match(DMAs$OwnerName, LU_owner$Owner_Name), "DMA"], 
+                               DMAs$DMA)
   
-  Yamhill_Ports <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+  Ports <- DMAs %>% dplyr::filter(!is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
 }
 
 ##D: Tribal Areas##
-if(nrow(Yamhill_DMAs) > 0 & tribal == TRUE){
-  Yamhill_DMAs$DMA <- ifelse(!is.na(Yamhill_DMAs$Tribe), Yamhill_DMAs$Tribe, Yamhill_DMAs$DMA)
-  Yamhill_Tribal <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-  Yamhill_Tribal$DMA <- paste0("TRIBE ", Yamhill_Tribal$DMA)
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+if(nrow(DMAs) > 0 & tribal == TRUE){
+  DMAs$DMA <- ifelse(!is.na(DMAs$Tribe), DMAs$Tribe, DMAs$DMA)
+  Tribal <- DMAs %>% dplyr::filter(!is.na(DMA))
+  Tribal$DMA <- paste0("TRIBE ", Tribal$DMA)
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
 }
 
 ##E: City Limits##
-if(nrow(Yamhill_DMAs) > 0){
-  Yamhill_DMAs$DMA <- ifelse(!is.na(Yamhill_DMAs$CityName), 
-                             Yamhill_DMAs$CityName, 
-                             Yamhill_DMAs$DMA)
-  Yamhill_Cities <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-  Yamhill_Cities$DMA <- paste0("City of ", Yamhill_Cities$DMA)
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+if(nrow(DMAs) > 0){
+  DMAs$DMA <- ifelse(!is.na(DMAs$CityName), 
+                             DMAs$CityName, 
+                             DMAs$DMA)
+  Cities <- DMAs %>% dplyr::filter(!is.na(DMA))
+  Cities$DMA <- paste0("City of ", Cities$DMA)
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   
 }
 
 ##F: Public Land Management##
 
-if(nrow(Yamhill_DMAs) > 0){  
+if(nrow(DMAs) > 0){  
   if (pubyear==2015){
-  Yamhill_DMAs$DMA <- ifelse( Yamhill_DMAs$LandManage != "PV" &
-                                 Yamhill_DMAs$LandManage != "PVI" &
-                                 Yamhill_DMAs$LandManage != "LG"&
-                                 Yamhill_DMAs$LandManage != "BIA"& 
-                                 Yamhill_DMAs$LandManage != "TRIBAL"&
-                                 Yamhill_DMAs$LandManage != "GSA", 
-                             Yamhill_DMAs$LandManage, 
-                             Yamhill_DMAs$DMA)
+  DMAs$DMA <- ifelse( DMAs$LandManage != "PV" &
+                                 DMAs$LandManage != "PVI" &
+                                 DMAs$LandManage != "LG"&
+                                 DMAs$LandManage != "BIA"& 
+                                 DMAs$LandManage != "TRIBAL"&
+                                 DMAs$LandManage != "GSA", 
+                             DMAs$LandManage, 
+                             DMAs$DMA)
   }
   
   if (pubyear==2019){
-    Yamhill_DMAs$DMA <- ifelse( Yamhill_DMAs$LandManage != "PV" &
-                                   Yamhill_DMAs$LandManage != "PVI" &
-                                   Yamhill_DMAs$LandManage != "PVN" &
-                                   Yamhill_DMAs$LandManage != "PVU" &
-                                   Yamhill_DMAs$LandManage != "LG"&
-                                   Yamhill_DMAs$LandManage != "BIA"& 
-                                   Yamhill_DMAs$LandManage != "UND"&
-                                   Yamhill_DMAs$LandManage != "GSA", 
-                                 Yamhill_DMAs$LandManage, 
-                                 Yamhill_DMAs$DMA)
+    DMAs$DMA <- ifelse( DMAs$LandManage != "PV" &
+                                   DMAs$LandManage != "PVI" &
+                                   DMAs$LandManage != "PVN" &
+                                   DMAs$LandManage != "PVU" &
+                                   DMAs$LandManage != "LG"&
+                                   DMAs$LandManage != "BIA"& 
+                                   DMAs$LandManage != "UND"&
+                                   DMAs$LandManage != "GSA", 
+                                 DMAs$LandManage, 
+                                 DMAs$DMA)
   }
    
-  Yamhill_Public <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
+  Public <- DMAs %>% dplyr::filter(!is.na(DMA))
   
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="ODF", 
-                               Yamhill_Public$DMA <- gsub("ODF$", "ODF-Public", Yamhill_Public$DMA), 
-                               Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="ODF", 
+                               Public$DMA <- gsub("ODF$", "ODF-Public", Public$DMA), 
+                               Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="NPS", 
-                               Yamhill_Public$DMA <- gsub("NPS", "USNPS", Yamhill_Public$DMA), 
-                               Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="NPS", 
+                               Public$DMA <- gsub("NPS", "USNPS", Public$DMA), 
+                               Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="FWS", 
-                               Yamhill_Public$DMA <- gsub("FWS", "USFWS", Yamhill_Public$DMA),
-                               Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="FWS", 
+                               Public$DMA <- gsub("FWS", "USFWS", Public$DMA),
+                               Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="DOD", 
-                               Yamhill_Public$DMA <- gsub("DOD", "USDOD", Yamhill_Public$DMA), 
-                               Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="DOD", 
+                               Public$DMA <- gsub("DOD", "USDOD", Public$DMA), 
+                               Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="DOE", 
-                               Yamhill_Public$DMA <- gsub("DOE", "USDOE", Yamhill_Public$DMA), 
-                               Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="DOE", 
+                               Public$DMA <- gsub("DOE", "USDOE", Public$DMA), 
+                               Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="BR", 
-                                Yamhill_Public$DMA <- gsub("BR", "USBR", Yamhill_Public$DMA), 
-                                Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="BR", 
+                                Public$DMA <- gsub("BR", "USBR", Public$DMA), 
+                                Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="COE", 
-                                Yamhill_Public$DMA <- gsub("COE", "USACE", Yamhill_Public$DMA), 
-                                Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="COE", 
+                                Public$DMA <- gsub("COE", "USACE", Public$DMA), 
+                                Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="STF", 
-                                Yamhill_Public$DMA <- gsub("STF", "ODF-Public", Yamhill_Public$DMA), 
-                                Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="STF", 
+                                Public$DMA <- gsub("STF", "ODF-Public", Public$DMA), 
+                                Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="STL", 
-                                Yamhill_Public$DMA <- gsub("STL", "ODSL", Yamhill_Public$DMA), 
-                                Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="STL", 
+                                Public$DMA <- gsub("STL", "ODSL", Public$DMA), 
+                                Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="STP", 
-                                Yamhill_Public$DMA <- gsub("STP", "OPRD", Yamhill_Public$DMA), 
-                                Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="STP", 
+                                Public$DMA <- gsub("STP", "OPRD", Public$DMA), 
+                                Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="STW", 
-                                Yamhill_Public$DMA <- gsub("STW", "ODFW", Yamhill_Public$DMA), 
-                                Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="STW", 
+                                Public$DMA <- gsub("STW", "ODFW", Public$DMA), 
+                                Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse((Yamhill_Public$DMA=="ST" & 
-                                  tolower(Yamhill_Public$OwnerName) %in% tolower(LU_owner$Owner_Name)), 
-                               LU_owner[match(tolower(Yamhill_Public$OwnerName), tolower(LU_owner$Owner_Name)), "DMA"], 
-                               Yamhill_Public$DMA)
+  Public$DMA <- ifelse((Public$DMA=="ST" & 
+                                  tolower(Public$OwnerName) %in% tolower(LU_owner$Owner_Name)), 
+                               LU_owner[match(tolower(Public$OwnerName), tolower(LU_owner$Owner_Name)), "DMA"], 
+                               Public$DMA)
   
-  Yamhill_Public$DMA <- ifelse(Yamhill_Public$DMA=="ST", 
-                                Yamhill_Public$DMA <- gsub("ST", "OR", Yamhill_Public$DMA), 
-                                Yamhill_Public$DMA)
+  Public$DMA <- ifelse(Public$DMA=="ST", 
+                                Public$DMA <- gsub("ST", "OR", Public$DMA), 
+                                Public$DMA)
   
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
 }
 
 ##G: Tax Lot Ownership##
-if(nrow(Yamhill_DMAs) > 0){
-  Yamhill_DMAs$DMA <- ifelse(tolower(Yamhill_DMAs$OwnerName) %in% tolower(LU_owner$Owner_Name),
-                             LU_owner[match(tolower(Yamhill_DMAs$OwnerName), tolower(LU_owner$Owner_Name)), "DMA"], 
-                             Yamhill_DMAs$DMA)
-  Yamhill_TaxlotOwners <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+if(nrow(DMAs) > 0){
+  DMAs$DMA <- ifelse(tolower(DMAs$OwnerName) %in% tolower(LU_owner$Owner_Name),
+                             LU_owner[match(tolower(DMAs$OwnerName), tolower(LU_owner$Owner_Name)), "DMA"], 
+                             DMAs$DMA)
+  TaxlotOwners <- DMAs %>% dplyr::filter(!is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
 }
 
 
 
 ##H: Zoning
 if(zcodes==TRUE){
-  if(nrow(Yamhill_DMAs) > 0){
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$orZClass == "Mining" &
-                                   !is.na(Yamhill_DMAs$OwnerName), 
+  if(nrow(DMAs) > 0){
+    DMAs$DMA <- ifelse(DMAs$orZClass == "Mining" &
+                                   !is.na(DMAs$OwnerName), 
                                  "DOGAMI", 
-                                 Yamhill_DMAs$DMA)
+                                 DMAs$DMA)
     
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$orZClass == "Forestry" &
-                                   !is.na(Yamhill_DMAs$OwnerName), 
+    DMAs$DMA <- ifelse(DMAs$orZClass == "Forestry" &
+                                   !is.na(DMAs$OwnerName), 
                                  "ODF-Private", 
-                                 Yamhill_DMAs$DMA)
+                                 DMAs$DMA)
     
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$orZClass == "Agriculture" &
-                                   !is.na(Yamhill_DMAs$OwnerName),
+    DMAs$DMA <- ifelse(DMAs$orZClass == "Agriculture" &
+                                   !is.na(DMAs$OwnerName),
                                  "ODA", 
-                                 Yamhill_DMAs$DMA)
+                                 DMAs$DMA)
     
-    Yamhill_Zoning <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-    Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+    Zoning <- DMAs %>% dplyr::filter(!is.na(DMA))
+    DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   }
 }
 
 if(zcodes==FALSE){
-  if(nrow(Yamhill_DMAs) > 0){
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$PrpClass == "Mining" &
-                                   !is.na(Yamhill_DMAs$OwnerName), 
+  if(nrow(DMAs) > 0){
+    DMAs$DMA <- ifelse(DMAs$PrpClass == "Mining" &
+                                   !is.na(DMAs$OwnerName), 
                                  "DOGAMI", 
-                                 Yamhill_DMAs$DMA)
+                                 DMAs$DMA)
     
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$PrpClass == "Forestry" &
-                                   !is.na(Yamhill_DMAs$OwnerName), 
+    DMAs$DMA <- ifelse(DMAs$PrpClass == "Forestry" &
+                                   !is.na(DMAs$OwnerName), 
                                  "ODF-Private", 
-                                 Yamhill_DMAs$DMA)
+                                 DMAs$DMA)
     
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$PrpClass == "Agriculture" &
-                                   !is.na(Yamhill_DMAs$OwnerName),
+    DMAs$DMA <- ifelse(DMAs$PrpClass == "Agriculture" &
+                                   !is.na(DMAs$OwnerName),
                                  "ODA", 
-                                 Yamhill_DMAs$DMA)
+                                 DMAs$DMA)
     
-    Yamhill_Zoning <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-    Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+    Zoning <- DMAs %>% dplyr::filter(!is.na(DMA))
+    DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   }
 }
 
 ##I: NLCD
 if(zcodes==TRUE){
-  if(nrow(Yamhill_DMAs) > 0){
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$orZClass == "Agriculture & Forestry" &
-                              Yamhill_DMAs$NLCD_Class == "Forest" &
-                              !is.na(Yamhill_DMAs$OwnerName),
+  if(nrow(DMAs) > 0){
+    DMAs$DMA <- ifelse(DMAs$orZClass == "Agriculture & Forestry" &
+                              DMAs$NLCD_Class == "Forest" &
+                              !is.na(DMAs$OwnerName),
                             "ODF-Private", 
-                            Yamhill_DMAs$DMA)
+                            DMAs$DMA)
     
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$orZClass == "Agriculture & Forestry" &
-                              Yamhill_DMAs$NLCD_Class == "Agriculture" &
-                              !is.na(Yamhill_DMAs$OwnerName),
+    DMAs$DMA <- ifelse(DMAs$orZClass == "Agriculture & Forestry" &
+                              DMAs$NLCD_Class == "Agriculture" &
+                              !is.na(DMAs$OwnerName),
                             "ODA", 
-                            Yamhill_DMAs$DMA)
+                            DMAs$DMA)
     
-    Yamhill_DMAs$DMA2 <- ifelse(Yamhill_DMAs$orZClass == "Agriculture & Forestry" &
-                               Yamhill_DMAs$DMA == "ODA",
+    DMAs$DMA2 <- ifelse(DMAs$orZClass == "Agriculture & Forestry" &
+                               DMAs$DMA == "ODA",
                              "ODF-Private", 
-                             Yamhill_DMAs$DMA2)
+                             DMAs$DMA2)
     
-    Yamhill_DMAs$DMA2 <- ifelse(Yamhill_DMAs$orZClass == "Agriculture & Forestry" &
-                               Yamhill_DMAs$DMA == "ODF-Private",
+    DMAs$DMA2 <- ifelse(DMAs$orZClass == "Agriculture & Forestry" &
+                               DMAs$DMA == "ODF-Private",
                              "ODA",
-                             Yamhill_DMAs$DMA2)
+                             DMAs$DMA2)
     
-    Yamhill_NLCD <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-    Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+    NLCD <- DMAs %>% dplyr::filter(!is.na(DMA))
+    DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   }
 }
 if(zcodes==FALSE){
-  if(nrow(Yamhill_DMAs) > 0){
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$PrpClass == "Agriculture & Forestry" &
-                              Yamhill_DMAs$NLCD_Class == "Forest" &
-                              !is.na(Yamhill_DMAs$OwnerName),
+  if(nrow(DMAs) > 0){
+    DMAs$DMA <- ifelse(DMAs$PrpClass == "Agriculture & Forestry" &
+                              DMAs$NLCD_Class == "Forest" &
+                              !is.na(DMAs$OwnerName),
                             "ODF-Private", 
-                            Yamhill_DMAs$DMA)
+                            DMAs$DMA)
     
-    Yamhill_DMAs$DMA <- ifelse(Yamhill_DMAs$PrpClass == "Agriculture & Forestry" &
-                              Yamhill_DMAs$NLCD_Class == "Agriculture" &
-                              !is.na(Yamhill_DMAs$OwnerName),
+    DMAs$DMA <- ifelse(DMAs$PrpClass == "Agriculture & Forestry" &
+                              DMAs$NLCD_Class == "Agriculture" &
+                              !is.na(DMAs$OwnerName),
                             "ODA", 
-                            Yamhill_DMAs$DMA)
+                            DMAs$DMA)
     
-    Yamhill_DMAs$DMA2 <- ifelse(Yamhill_DMAs$PrpClass == "Agriculture & Forestry" &
-                               Yamhill_DMAs$DMA == "ODA",
+    DMAs$DMA2 <- ifelse(DMAs$PrpClass == "Agriculture & Forestry" &
+                               DMAs$DMA == "ODA",
                              "ODF-Private", 
-                             Yamhill_DMAs$DMA2)
+                             DMAs$DMA2)
     
-    Yamhill_DMAs$DMA2 <- ifelse(Yamhill_DMAs$PrpClass == "Agriculture & Forestry" &
-                               Yamhill_DMAs$DMA == "ODF-Private",
+    DMAs$DMA2 <- ifelse(DMAs$PrpClass == "Agriculture & Forestry" &
+                               DMAs$DMA == "ODF-Private",
                              "ODA",
-                             Yamhill_DMAs$DMA2)
+                             DMAs$DMA2)
     
-    Yamhill_NLCD <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-    Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+    NLCD <- DMAs %>% dplyr::filter(!is.na(DMA))
+    DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
   }
 }
 
 ##J: Water##
-if(nrow(Yamhill_DMAs) > 0){
+if(nrow(DMAs) > 0){
   if (pubyear==2015){
-  Yamhill_DMAs$DMA <- ifelse((grepl("WATER", Yamhill_DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
-                                Yamhill_DMAs$LandManage != "PV" &
-                                Yamhill_DMAs$LandManage != "PVI" &
-                                Yamhill_DMAs$LandManage != "LG"&
-                                Yamhill_DMAs$LandManage != "BIA"& 
-                                Yamhill_DMAs$LandManage != "TRIBAL"&
-                                Yamhill_DMAs$LandManage != "GSA"), 
-                             Yamhill_DMAs$LandManage, 
-                             Yamhill_DMAs$DMA)
+  DMAs$DMA <- ifelse((grepl("WATER", DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
+                                DMAs$LandManage != "PV" &
+                                DMAs$LandManage != "PVI" &
+                                DMAs$LandManage != "LG"&
+                                DMAs$LandManage != "BIA"& 
+                                DMAs$LandManage != "TRIBAL"&
+                                DMAs$LandManage != "GSA"), 
+                             DMAs$LandManage, 
+                             DMAs$DMA)
   }
   
   if (pubyear==2019){
-    Yamhill_DMAs$DMA <- ifelse((grepl("WATER", Yamhill_DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
-                                   Yamhill_DMAs$LandManage != "PV" &
-                                   Yamhill_DMAs$LandManage != "PVI" &
-                                   Yamhill_DMAs$LandManage != "PVN" &
-                                   Yamhill_DMAs$LandManage != "PVU" &
-                                   Yamhill_DMAs$LandManage != "LG"&
-                                   Yamhill_DMAs$LandManage != "BIA"& 
-                                   Yamhill_DMAs$LandManage != "UND"&
-                                   Yamhill_DMAs$LandManage != "GSA"), 
-                                Yamhill_DMAs$LandManage, 
-                                Yamhill_DMAs$DMA)
+    DMAs$DMA <- ifelse((grepl("WATER", DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE) &
+                                   DMAs$LandManage != "PV" &
+                                   DMAs$LandManage != "PVI" &
+                                   DMAs$LandManage != "PVN" &
+                                   DMAs$LandManage != "PVU" &
+                                   DMAs$LandManage != "LG"&
+                                   DMAs$LandManage != "BIA"& 
+                                   DMAs$LandManage != "UND"&
+                                   DMAs$LandManage != "GSA"), 
+                                DMAs$LandManage, 
+                                DMAs$DMA)
   }
   
-  Yamhill_DMAs$DMA <- ifelse(is.na(Yamhill_DMAs$DMA) &
-                               grepl("WATER", Yamhill_DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE), 
+  DMAs$DMA <- ifelse(is.na(DMAs$DMA) &
+                               grepl("WATER", DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE), 
                              "WATER", 
-                             Yamhill_DMAs$DMA)
-  Yamhill_DMAs$DMA <- ifelse(is.na(Yamhill_DMAs$DMA) &
-                            grepl("RIV", Yamhill_DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE), 
+                             DMAs$DMA)
+  DMAs$DMA <- ifelse(is.na(DMAs$DMA) &
+                            grepl("RIV", DMAs$Taxlot, ignore.case = TRUE, fixed = FALSE), 
                           "WATER", 
-                          Yamhill_DMAs$DMA)
+                          DMAs$DMA)
   
-  Yamhill_Water <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
+  Water <- DMAs %>% dplyr::filter(!is.na(DMA))
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="ODF", 
-                              Yamhill_Water$DMA <- gsub("ODF$", "ODF-Public", Yamhill_Water$DMA), 
-                              Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="ODF", 
+                              Water$DMA <- gsub("ODF$", "ODF-Public", Water$DMA), 
+                              Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="NPS", 
-                              Yamhill_Water$DMA <- gsub("NPS", "USNPS", Yamhill_Water$DMA), 
-                              Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="NPS", 
+                              Water$DMA <- gsub("NPS", "USNPS", Water$DMA), 
+                              Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="FWS", 
-                              Yamhill_Water$DMA <- gsub("FWS", "USFWS", Yamhill_Water$DMA),
-                              Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="FWS", 
+                              Water$DMA <- gsub("FWS", "USFWS", Water$DMA),
+                              Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="DOD", 
-                              Yamhill_Water$DMA <- gsub("DOD", "USDOD", Yamhill_Water$DMA), 
-                              Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="DOD", 
+                              Water$DMA <- gsub("DOD", "USDOD", Water$DMA), 
+                              Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="DOE", 
-                              Yamhill_Water$DMA <- gsub("DOE", "USDOE", Yamhill_Water$DMA), 
-                              Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="DOE", 
+                              Water$DMA <- gsub("DOE", "USDOE", Water$DMA), 
+                              Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="BR", 
-                                Yamhill_Water$DMA <- gsub("BR", "USBR", Yamhill_Water$DMA), 
-                                Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="BR", 
+                                Water$DMA <- gsub("BR", "USBR", Water$DMA), 
+                                Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="COE", 
-                                Yamhill_Water$DMA <- gsub("COE", "USACE", Yamhill_Water$DMA), 
-                                Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="COE", 
+                                Water$DMA <- gsub("COE", "USACE", Water$DMA), 
+                                Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="ST", 
-                                Yamhill_Water$DMA <- gsub("ST", "OR", Yamhill_Water$DMA), 
-                                Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="ST", 
+                                Water$DMA <- gsub("ST", "OR", Water$DMA), 
+                                Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="STF", 
-                                Yamhill_Water$DMA <- gsub("STF", "ODF-Public", Yamhill_Water$DMA), 
-                                Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="STF", 
+                                Water$DMA <- gsub("STF", "ODF-Public", Water$DMA), 
+                                Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="STL", 
-                                Yamhill_Water$DMA <- gsub("STL", "ODSL", Yamhill_Water$DMA), 
-                                Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="STL", 
+                                Water$DMA <- gsub("STL", "ODSL", Water$DMA), 
+                                Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="STP", 
-                                Yamhill_Water$DMA <- gsub("STP", "OPRD", Yamhill_Water$DMA), 
-                                Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="STP", 
+                                Water$DMA <- gsub("STP", "OPRD", Water$DMA), 
+                                Water$DMA)
   
-  Yamhill_Water$DMA <- ifelse(Yamhill_Water$DMA=="STW", 
-                                Yamhill_Water$DMA <- gsub("STW", "ODFW", Yamhill_Water$DMA), 
-                                Yamhill_Water$DMA)
+  Water$DMA <- ifelse(Water$DMA=="STW", 
+                                Water$DMA <- gsub("STW", "ODFW", Water$DMA), 
+                                Water$DMA)
   
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
 }
 
 ##K: County##
 #If a DMA has not yet been assigned, the county is the DMA
-if(nrow(Yamhill_DMAs) > 0){
-  Yamhill_DMAs$DMA <- countyname
-  Yamhill_County <- Yamhill_DMAs %>% dplyr::filter(!is.na(DMA))
-  Yamhill_DMAs <- Yamhill_DMAs %>% dplyr::filter(is.na(DMA))
+if(nrow(DMAs) > 0){
+  DMAs$DMA <- countyname
+  County <- DMAs %>% dplyr::filter(!is.na(DMA))
+  DMAs <- DMAs %>% dplyr::filter(is.na(DMA))
 }
 
 # Review ------------------------------------------------------------------
 
-#Search Yamhill_County for tax lots owned by DMAs. Add unique DMA names to Taxlot ownerhip csv.
-#search Yamhill_NLCD for improperly assigned DMAs, look for timber company owners of DMA lots and ag company owners of ODF lots.
+#Search County for tax lots owned by DMAs. Add unique DMA names to Taxlot ownerhip csv.
+#search NLCD for improperly assigned DMAs, look for timber company owners of DMA lots and ag company owners of ODF lots.
 
 #recombine all subsets of the original tax lot data and write to shapefile
-if(nrow(Yamhill_DMAs) == 0 & tribal== TRUE){
-  Yamhill_DMAs <- rbind(Yamhill_Cities, Yamhill_County, Yamhill_NLCD, Yamhill_Public, Yamhill_Ports, Yamhill_Rails, Yamhill_Roads, Yamhill_TaxlotOwners, Yamhill_Tribal, Yamhill_Water, Yamhill_Zoning)
+if(nrow(DMAs) == 0 & tribal== TRUE){
+  DMAs <- rbind(Cities, County, NLCD, Public, Ports, Rails, Roads, TaxlotOwners, Tribal, Water, Zoning)
 }
 
-if(nrow(Yamhill_DMAs) == 0 & tribal== FALSE){
-  Yamhill_DMAs <- rbind(Yamhill_Cities, Yamhill_County, Yamhill_NLCD, Yamhill_Public, Yamhill_Ports, Yamhill_Rails, Yamhill_Roads, Yamhill_TaxlotOwners, Yamhill_Water, Yamhill_Zoning)
+if(nrow(DMAs) == 0 & tribal== FALSE){
+  DMAs <- rbind(Cities, County, NLCD, Public, Ports, Rails, Roads, TaxlotOwners, Water, Zoning)
 }
 
 #add official DMA name
-Yamhill_DMAs$DMA_RP <- as.character("")
-Yamhill_DMAs$DMA_RP <- ifelse(Yamhill_DMAs$DMA %in% LU_DMAs$DMA, LU_DMAs[match(Yamhill_DMAs$DMA, LU_DMAs$DMA), "DMA_FullName"], Yamhill_DMAs$DMA_RP)
+DMAs$DMA_RP <- as.character("")
+DMAs$DMA_RP <- ifelse(DMAs$DMA %in% LU_DMAs$DMA, LU_DMAs[match(DMAs$DMA, LU_DMAs$DMA), "DMA_FullName"], DMAs$DMA_RP)
 
 #add official DMA name for DMA2
-Yamhill_DMAs$DMA_RP2 <- as.character("")
-Yamhill_DMAs$DMA_RP2 <- ifelse(Yamhill_DMAs$DMA2 %in% LU_DMAs$DMA, LU_DMAs[match(Yamhill_DMAs$DMA2, LU_DMAs$DMA), "DMA_FullName"], Yamhill_DMAs$DMA_RP2)
+DMAs$DMA_RP2 <- as.character("")
+DMAs$DMA_RP2 <- ifelse(DMAs$DMA2 %in% LU_DMAs$DMA, LU_DMAs[match(DMAs$DMA2, LU_DMAs$DMA), "DMA_FullName"], DMAs$DMA_RP2)
 
 #Add DMA classification
-Yamhill_DMAs$DMA_RP_Cl <- as.character("")
-Yamhill_DMAs$DMA_RP_Cl <- ifelse(Yamhill_DMAs$DMA %in% LU_DMAs$DMA, LU_DMAs[match(Yamhill_DMAs$DMA, LU_DMAs$DMA), "DMA_Class"], Yamhill_DMAs$DMA_RP_Cl)
+DMAs$DMA_RP_Cl <- as.character("")
+DMAs$DMA_RP_Cl <- ifelse(DMAs$DMA %in% LU_DMAs$DMA, LU_DMAs[match(DMAs$DMA, LU_DMAs$DMA), "DMA_Class"], DMAs$DMA_RP_Cl)
 
 #Add DMA2 classification
-Yamhill_DMAs$DMA_RP2_Cl <- as.character("")
-Yamhill_DMAs$DMA_RP2_Cl <- ifelse(Yamhill_DMAs$DMA2 %in% LU_DMAs$DMA, LU_DMAs[match(Yamhill_DMAs$DMA2, LU_DMAs$DMA), "DMA_Class"], Yamhill_DMAs$DMA_RP2_Cl)
+DMAs$DMA_RP2_Cl <- as.character("")
+DMAs$DMA_RP2_Cl <- ifelse(DMAs$DMA2 %in% LU_DMAs$DMA, LU_DMAs[match(DMAs$DMA2, LU_DMAs$DMA), "DMA_Class"], DMAs$DMA_RP2_Cl)
 
 #Add symbology
-Yamhill_DMAs$Symbol <- as.character("")
-Yamhill_DMAs$Symbol <-ifelse(Yamhill_DMAs$DMA %in% LU_DMAs$DMA, LU_DMAs[match(Yamhill_DMAs$DMA, LU_DMAs$DMA), "Symbol"], Yamhill_DMAs$Symbol)
+DMAs$Symbol <- as.character("")
+DMAs$Symbol <-ifelse(DMAs$DMA %in% LU_DMAs$DMA, LU_DMAs[match(DMAs$DMA, LU_DMAs$DMA), "Symbol"], DMAs$Symbol)
 
 #Add flag field for manual edits needing
-Yamhill_DMAs$edit <- as.character("")
+DMAs$edit <- as.character("")
 
 #Rename DMA field
-Yamhill_DMAs <- plyr::rename(Yamhill_DMAs, c("DMA"="DMA_RP_Ab","DMA2"="DMA_RP2_Ab"))
+DMAs <- plyr::rename(DMAs, c("DMA"="DMA_RP_Ab","DMA2"="DMA_RP2_Ab"))
 
 #reorder columns
-Yamhill_DMAs <- Yamhill_DMAs[c("Taxlot","MapTaxlot","RoadOwner","RailOwner","RailInt","Tribe", "CityName","LandManage","OwnerName","orZCode","orZDesc","orZClass", "PrpClsDsc","PrpClass","NLCD","NLCD_Type", "NLCD_Class", "DMA_RP_Ab","DMA_RP","DMA_RP_Cl","DMA_RP2_Ab","DMA_RP2","DMA_RP2_Cl", "edit", "Symbol")]
+DMAs <- DMAs[c("Taxlot","MapTaxlot","RoadOwner","RailOwner","RailInt","Tribe", "CityName","LandManage","OwnerName","orZCode","orZDesc","orZClass", "PrpClsDsc","PrpClass","NLCD","NLCD_Type", "NLCD_Class", "DMA_RP_Ab","DMA_RP","DMA_RP_Cl","DMA_RP2_Ab","DMA_RP2","DMA_RP2_Cl", "edit", "Symbol")]
 #write to shapefile
-st_write(Yamhill_DMAs,dsn=gis_dir, "Yamhill_DMAs.shp", driver = "ESRI Shapefile",
+st_write(DMAs,dsn=gis_dir, "DMAs.shp", driver = "ESRI Shapefile",
          update=TRUE )
 
 # Return to ArcMap for final edits ----------------------------------
