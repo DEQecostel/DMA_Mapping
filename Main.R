@@ -243,15 +243,17 @@ if(tribal==FALSE){
 tzcptr_rr <- st_read(gis_dir,"tzcptr_rr", stringsAsFactors = FALSE)
 
 #Rename columns, and add DMA and DMA2 columns
-DMAs<-tzcptr_rr[,c("Taxlot","MapTaxlot","ROADOWNER","RR_NAME", "RailInt", "CityName","OwnerName","LandManage","orZCode","orZDesc","NLCD","NLCD_Type", "Tribe")]
+DMAs<-tzcptr_rr[,c("Taxlot","MapTaxlot","ROADOWNER","RR_NAME", "RailInt", "CityName","OwnerName","LandManage","orZCode","orZDesc","PrpClsDsc",  "PrpClass", "NLCD","NLCD_Type", "Tribe")]
 DMAs <- plyr::rename(DMAs, c("ROADOWNER"="RoadOwner", "RR_NAME"="RailOwner"))
 DMAs$DMA<-as.character(NA)
 DMAs$DMA2<-as.character(NA)
 
 #Add PrpClsDsc and PrpClass columns if they do not already exist
-if(zcodes==TRUE){
-DMAs$PrpClsDsc <- as.character("")
+if(!("PrpClass"  %in% colnames(DMAs))){
 DMAs$PrpClass <- as.character("")
+}
+if(!("PrpClsDsc" %in% colnames(DMAs))){
+          DMAs$PrpClsDsc <- as.character("")
 }
 
 #use LU_zoning and LU_nlcd to classify zone codes and land cover
@@ -269,11 +271,9 @@ DMAs$NLCD_Class <- ifelse(DMAs$NLCD %in% LU_nlcd$NLCD.Code,
 
 #export as shp to save progress
 st_write(DMAs,dsn=gis_dir, "DMAs_R1.shp", driver = "ESRI Shapefile", update=TRUE )
-#DMAs <- st_read(gis_dir,"DMAs_R1", stringsAsFactors = FALSE)
 
 #copy original DMAs dataframe for backup
 df.all <- DMAs
-#DMAs <- df.all
 
 ##A: Roads##
 if(nrow(DMAs) > 0 & gaps == FALSE){
@@ -692,7 +692,7 @@ if(nrow(DMAs) > 0){
 
 # Review ------------------------------------------------------------------
 
-#Search County for tax lots owned by DMAs. Add unique DMA names to Taxlot ownerhip csv.
+#Search County for tax lots owned by DMAs. Add unique DMA names to Taxlot ownerhip csv, reload LU_owner, and rerun assign DMAs section.
 #search NLCD for improperly assigned DMAs, look for timber company owners of DMA lots and ag company owners of ODF lots.
 
 #recombine all subsets of the original tax lot data and write to shapefile
