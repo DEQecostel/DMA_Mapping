@@ -10,7 +10,7 @@ library(stringr)
 # Input Data ------------------------------------------------------------
 
 #County GIS directory name
-gis_dir <- "//deqhq1/TMDL/DMA_Mapping/Baker/GIS"
+gis_dir <- "//deqhq1/TMDL/DMA_Mapping/Baker/GIS/test"
 #County GIS file names
 taxlot_name <- "Baker_Taxlot01withTable"
 zoning_name <- "zoning_union"
@@ -36,7 +36,7 @@ LU_rail_name <- "railroads.csv"
 LU_roads_name <- "roads.csv"
 LU_DMAs_name <- "DMAs.csv"
 
-#County specific details
+#County specific inputs
 #Name of county
 countyname <- "Baker County"
 #Are there gaps in the tax lots shapefile? (usually roads and waterways) (yes=TRUE, no=FALSE)
@@ -47,6 +47,8 @@ tribal <- FALSE
 zcodes <- TRUE
 #Is the public land management data from 2015 or 2019?
 pubyear <- 2019
+#Name of column with tax lot owner name information
+owner_col <- "OwnerLine1"
 
 
 # Read in data ---------------------------------------------------------
@@ -96,7 +98,7 @@ rail_line_clip <- rail_line_clip[,c("RR_NAME")]
 ##TAXLOTS##
 if(zcodes==TRUE){
   #Subset tax lots attribute table to include unique tax lot identifier (APN), tax lot type, owner name and NLCD information.
-  t<-taxlots[,c("Taxlot", "MapTaxlot", "OWNERLINE1", "NLCD", "NLCD_Type")]
+  t<-taxlots[,c("Taxlot", "MapTaxlot", owner_col, "NLCD", "NLCD_Type")]
   #buffer tax lots
   t<-st_buffer(t, 0.0)
   #set precision
@@ -107,9 +109,9 @@ if(zcodes==TRUE){
   rail_line_clip <- st_transform(rail_line_clip, st_crs(t))
   t <- st_join(t, rail_line_clip)
   #subset attributes
-  t <- t[,c("Taxlot", "MapTaxlot", "OWNERLINE1", "NLCD", "NLCD_Type", "RR_NAME")]
+  t <- t[,c("Taxlot", "MapTaxlot", owner_col, "NLCD", "NLCD_Type", "RR_NAME")]
   #rename columns
-  t <- plyr::rename(t, c("OWNERLINE1"="OwnerName", "RR_NAME"="RailInt"))
+  t <- dplyr::rename(t, c("OwnerName" = all_of(owner_col), "RailInt" = "RR_NAME"))
   #export as shp to save progress
   st_write(t,dsn = gis_dir, "t.shp", driver = "ESRI Shapefile", update=TRUE)
 }
