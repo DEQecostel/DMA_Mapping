@@ -6,11 +6,16 @@ library(lwgeom)
 library(plyr)
 library(dplyr)
 library(stringr)
+library(readxl)
 
 # Input Data ------------------------------------------------------------
 
+paths <- readxl::read_excel(path = "gis_paths.xlsx",
+                            sheet = "paths" , col_names = TRUE,
+                            col_types = c('text', 'text', 'text'))
+
 #County GIS directory name
-gis_dir <- "//deqhq1/TMDL/DMA_Mapping/Baker/GIS/test"
+gis_dir <- paths$gis_dir_path[1]
 #County GIS file names
 taxlot_name <- "Baker_Taxlot01withTable"
 zoning_name <- "zoning_union"
@@ -20,14 +25,14 @@ citylim_name <-  "citylim_union"
 county_name <- "BakerCounty"
 
 #Main GIS directory name
-gis_main <- "//deqhq1/TMDL/DMA_Mapping/Main/GIS"
+gis_main <- paths$gis_main_path[1]
 #Main GIS file names
 road_name <- "roads_2017_300ftBuffer"
 rail_buff_name <- "railroads_2017_200ftBuffer"
 rail_line_name <- "railroads"
 
 #Look Up Table directory name
-LU_dir <-  "//deqhq1/TMDL/DMA_Mapping/Main/Lookups"
+LU_dir <-  paths$LU_dir_path[1]
 #Look Up Table names
 LU_owner_name <- "TaxlotOwners.csv"
 LU_zoning_name <- "ZoningClassification.csv"
