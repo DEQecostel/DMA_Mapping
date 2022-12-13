@@ -12,7 +12,8 @@ library(readxl)
 
 paths <- readxl::read_excel(path = "gis_paths.xlsx",
                             sheet = "paths" , col_names = TRUE,
-                            col_types = c('text', 'text', 'text'))
+                            col_types = c('text', 'text', 'text',
+                                          'text', 'text', 'text'))
 
 #County GIS directory name
 gis_dir <- paths$gis_dir_path[1]
