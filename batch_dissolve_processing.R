@@ -79,7 +79,7 @@ dma_dissolve <- function(df_county, dmaGIS = dmaGIS, huc_12 = huc_12, out_dir = 
   county_name <- unique(df_county$County)[1]
   
   gispath <- dmaGIS[[county_name]]
-
+  
   print(paste0("Processing ", county_name))
   start_time <- Sys.time()
   
@@ -109,7 +109,13 @@ dma_dissolve <- function(df_county, dmaGIS = dmaGIS, huc_12 = huc_12, out_dir = 
   dma.shp6 <- dma.shp5 %>%
     dplyr::mutate(HUC6 = substr(HUC12, 1, 6),
                   HUC8 = substr(HUC12, 1, 8),
-                  HUC10 = substr(HUC12, 1, 10)) %>%
+                  HUC10 = substr(HUC12, 1, 10),
+                  DMA_RP = dplyr::case_when(Symbol == "Private Utility" & DMA_RP_Cl == "Private" ~ "Private Utility",
+                                            Symbol == "Railroad" & DMA_RP_Cl == "Private" ~ "Private Railroad",
+                                            TRUE ~ DMA_RP),
+                  DMA_RP_Ab = dplyr::case_when(Symbol == "Private Utility" & DMA_RP_Cl == "Private" ~ "Private Utility",
+                                               Symbol == "Railroad" & DMA_RP_Cl == "Private" ~ "Private Railroad",
+                                               TRUE ~ DMA_RP_Ab)) %>%
     dplyr::select(DMA_RP, DMA_RP_Ab, DMA_RP_Cl, Symbol, HUC6, HUC8, HUC10, HUC12, Version)
   
   end_time <- Sys.time()
