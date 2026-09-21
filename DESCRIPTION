@@ -1,4 +1,4 @@
-Package: DMA_Mapping
+Package: dmamapping
 Type: Package
 Title: Tool for mapping designated management agencies for clean water act implementation in Oregon.
 Version: 0.1.0

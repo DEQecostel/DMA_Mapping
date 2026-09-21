@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-#' DMA_v1 <- nlcd_majority(nlcd="C:/Users/ecostel/DMA_Mapping/DMA_Mapping/GIS/NLCD_2016_Land_Cover_L48_20190424.img", DMA_dir = "C:/Users/ecostel/DMA_Mapping/DMA_Mapping/GIS", DMA_file = "Jefferson_DMAs_2019-2E" )
+#' DMA_v1 <- nlcd_majority(nlcd="C:/Users/ecostel/dmamapping/dmamapping/GIS/NLCD_2016_Land_Cover_L48_20190424.img", DMA_dir = "C:/Users/ecostel/dmamapping/dmamapping/GIS", DMA_file = "Jefferson_DMAs_2019-2E" )
 
 nlcd_majority<- function(nlcd, DMA_dir, DMA_file, region) {
 
