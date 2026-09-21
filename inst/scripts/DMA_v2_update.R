@@ -4,12 +4,13 @@
 
 start_time <- Sys.time()
 #Calculate the majority NLCD code for each polygon then add the information to the NLCD data cells that are currently empty.
-DMA_v1 <- nlcd_majority(nlcd="C:/Users/ecostel/DMA_Mapping/DMA_Mapping/GIS/NLCD_2016_Land_Cover_L48_20190424.img",
-                            DMA_dir = "C:/Users/ecostel/DMA_Mapping/DMA_Mapping/GIS",
-                            DMA_file = "Jefferson_DMAs_2019-2E" )
+DMA_v1 <- nlcd_majority(nlcd="path/NLCD_2016_Land_Cover_L48_20190424.img",
+                        DMA_dir = "path/GIS",
+                        DMA_file = "Jefferson_DMAs_2019-2E",
+                        region = "eastern")
 
 #Reassign DMAs for all polygons based on updated nlcd data, except for those that have been flagged as edited manually.
-DMA_v2 <- assign_dma(DMA= DMA_fc[1,],
+DMA_v2 <- assign_dma(DMA= DMA_v1,
                      countyname = "Jefferson County",
                      gaps= FALSE,
                      tribal = TRUE,
@@ -20,6 +21,6 @@ DMA_v2 <- assign_dma(DMA= DMA_fc[1,],
 end_time <- Sys.time()
 processing_time <-  end_time - start_time
 
-#st_write(DMA_v2, "path/Jefferson_DMAs_2019-2.shp")
+#st_write(DMA_v2, "path/Jefferson_DMAs_2019-4.shp")
 
 
