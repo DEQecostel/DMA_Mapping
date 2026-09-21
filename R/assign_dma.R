@@ -7,12 +7,13 @@
 #' @param tribal TRUE/FALSe indicating whether there are tribal areas within the county
 #' @param zcode TRUE/FALSE indicating whether zoning data is included for this county in the statwide basedata layer
 #' @param pubyear 2016 or 2019 indicating the year of the public land management GIS base data layer
+#' @param region "eastern" or "western" indicating which NLCD Lookup table to load. This determines how nlcd land cover type shrub/scrub will be classifiied; as "Agriculture" in the eastern region and as "Forest" in the western region.
 #'
 #' @returns DMA
 #' @export
 #'
 #' @examples
-#' DMA_v2 <- assign_dma(DMA= DMA, DMA_dir, countyname = "Jefferson County", gaps= FALSE, tribal = TRUE, zcode = TRUE, pubyear= 2019)
+#' DMA_v2 <- assign_dma(DMA= DMA, DMA_dir, countyname = "Jefferson County", gaps= FALSE, tribal = TRUE, zcode = TRUE, pubyear= 2019, region = "eastern")
 
 assign_dma <- function(DMA,
                        DMA_dir,
@@ -20,18 +21,19 @@ assign_dma <- function(DMA,
                        gaps,
                        tribal,
                        zcode,
-                       pubyear)
+                       pubyear,
+                       region)
   {
 
-  # - TESTING
-  DMA <- DMA_v1
-  countyname <- "Jefferson County"
-  gaps <- FALSE
-  tribal <- TRUE
-  zcode <- TRUE
-  pubyear <- 2019
-
-  # --
+  # # - TESTING
+  # DMA <- DMA_v1
+  # countyname <- "Jefferson County"
+  # gaps <- FALSE
+  # tribal <- TRUE
+  # zcode <- TRUE
+  # pubyear <- 2019
+  # region <- "eastern"
+  # # --
 
   #load packages
   library(sf)
@@ -62,11 +64,16 @@ assign_dma <- function(DMA,
 
   #Read in look up tables as rdata frames saved in DMAmapping package
   data(LU_DMAs)
-  data(LU_nlcd)
   data(LU_owner)
   data(LU_rail)
   data(LU_roads)
   data(LU_zoning)
+  if (region == "western") {
+    data(LU_nlcd_wr)
+  }
+  if (region == "eastern") {
+    data(LU_nlcd_er)
+  }
 
   #create data frame of all polygons with manually edited DMAs
   Edit <- DMA %>%

@@ -14,7 +14,8 @@ DMA_v2 <- assign_dma(DMA= DMA_fc[1,],
                      gaps= FALSE,
                      tribal = TRUE,
                      zcode = TRUE,
-                     pubyear= 2019)
+                     pubyear= 2019,
+                     region = "eastern")
 
 end_time <- Sys.time()
 processing_time <-  end_time - start_time
