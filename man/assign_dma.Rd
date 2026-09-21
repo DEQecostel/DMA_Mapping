@@ -4,7 +4,7 @@
 \alias{assign_dma}
 \title{Assign DMA to polygons}
 \usage{
-assign_dma(DMA, DMA_dir, countyname, gaps, tribal, zcode, pubyear)
+assign_dma(DMA, DMA_dir, countyname, gaps, tribal, zcode, pubyear, region)
 }
 \arguments{
 \item{DMA}{This is the DMA R object output by the nlcd_majority() function. This can also be the file name of the county DMA GIS file}
@@ -20,6 +20,8 @@ assign_dma(DMA, DMA_dir, countyname, gaps, tribal, zcode, pubyear)
 \item{zcode}{TRUE/FALSE indicating whether zoning data is included for this county in the statwide basedata layer}
 
 \item{pubyear}{2016 or 2019 indicating the year of the public land management GIS base data layer}
+
+\item{region}{"eastern" or "western" indicating which NLCD Lookup table to load. This determines how nlcd land cover type shrub/scrub will be classifiied; as "Agriculture" in the eastern region and as "Forest" in the western region.}
 }
 \value{
 DMA
@@ -28,5 +30,5 @@ DMA
 Assign DMA to polygons
 }
 \examples{
-DMA_v2 <- assign_dma(DMA= DMA, DMA_dir, countyname = "Jefferson County", gaps= FALSE, tribal = TRUE, zcode = TRUE, pubyear= 2019)
+DMA_v2 <- assign_dma(DMA= DMA, DMA_dir, countyname = "Jefferson County", gaps= FALSE, tribal = TRUE, zcode = TRUE, pubyear= 2019, region = "eastern")
 }
