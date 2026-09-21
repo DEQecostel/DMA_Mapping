@@ -54,14 +54,6 @@ assign_dma <- function(DMA,
     DMA <- DMA
     }
 
- #Read in look up tables
-  # LU_nlcd <- readr::read_csv("//deqhq1/TMDL/DMA_Mapping/Main/Lookups/LandcoverClassification.csv", locale = locale(encoding = "latin1"))
-  # LU_owner <- readr::read_csv("//deqhq1/TMDL/DMA_Mapping/Main/Lookups/TaxlotOwners.csv", locale = locale(encoding = "latin1"))
-  # LU_zoning<- readr::read_csv("//deqhq1/TMDL/DMA_Mapping/Main/Lookups/ZoningClassification.csv", locale = locale(encoding = "latin1"))
-  # LU_rail <- readr::read_csv("//deqhq1/TMDL/DMA_Mapping/Main/Lookups/railroads.csv", locale = locale(encoding = "latin1"))
-  # LU_roads <- readr::read_csv("//deqhq1/TMDL/DMA_Mapping/Main/Lookups/roads.csv", locale = locale(encoding = "latin1"))
-  # LU_DMAs<- readr::read_csv("//deqhq1/TMDL/DMA_Mapping/Main/Lookups/DMAs.csv", locale = locale(encoding = "latin1"))
-
   #Read in look up tables as rdata frames saved in DMAmapping package
   data(LU_DMAs)
   data(LU_owner)
