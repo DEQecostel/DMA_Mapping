@@ -1,6 +1,6 @@
 Package: DMA_Mapping
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Tool for mapping designated management agencies for clean water act implementation in Oregon.
 Version: 0.1.0
 Authors@R: c(
     person(
@@ -11,7 +11,7 @@ Authors@R: c(
   )
 Description: More about what it does (maybe more than one line).
     Continuation lines should be indented.
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Config/roxygen2/version: 8.1.0
