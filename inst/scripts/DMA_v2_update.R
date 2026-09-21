@@ -20,6 +20,6 @@ DMA_v2 <- assign_dma(DMA= DMA_fc[1,],
 end_time <- Sys.time()
 processing_time <-  end_time - start_time
 
-#st_write(DMA_v2, "C:/Users/ecostel/DMA_Mapping/DMA_Mapping/GIS/Jefferson_DMAs_2019-2.shp")
+#st_write(DMA_v2, "path/Jefferson_DMAs_2019-2.shp")
 
 
